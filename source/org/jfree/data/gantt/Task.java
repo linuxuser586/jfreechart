@@ -75,6 +75,12 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
     /** Storage for the sub-tasks (if any). */
     private List subtasks;
 
+    /** If it is a summary task. */
+    private boolean summaryTask;
+
+    /** If it is a summary task. */
+    private boolean milestone;
+
     /**
      * Creates a new task.
      *
@@ -88,6 +94,8 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
         this.duration = duration;
         this.percentComplete = null;
         this.subtasks = new java.util.ArrayList();
+        this.summaryTask = false;
+        this.milestone = false;
     }
 
     /**
@@ -203,6 +211,42 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
      */
     public Task getSubtask(int index) {
         return (Task) this.subtasks.get(index);
+    }
+
+    /**
+     * Returns if the task is a summary task or not.
+     *
+     * @return A summary task boolean (never <code>null</code>).
+     */
+    public boolean isSummaryTask() {
+        return this.summaryTask;
+    }
+
+    /**
+     * Sets if the task is a summary task or not.
+     *
+     * @param summaryTask a summary task boolean.
+     */
+    public void setSummaryTask(boolean summaryTask) {
+        this.summaryTask = summaryTask;
+    }
+
+    /**
+     * Returns if the task is a milestone or not.
+     *
+     * @return A milestone boolean (never <code>null</code>).
+     */
+    public boolean isMilestone() {
+        return this.milestone;
+    }
+
+    /**
+     * Sets if the task is a milestone or not.
+     *
+     * @param milestone a milestone boolean.
+     */
+    public void setMilestone(boolean milestone) {
+        this.milestone = milestone;
     }
 
     /**

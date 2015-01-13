@@ -75,9 +75,11 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.util.ParamChecks;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.gantt.GanttCategoryDataset;
+import org.jfree.data.gantt.Task;
 import org.jfree.io.SerialUtilities;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.util.PaintUtilities;
+import org.jfree.util.ShapeUtilities;
 
 /**
  * A renderer for simple Gantt charts.  The example shown
@@ -454,21 +456,38 @@ public class GanttRenderer extends IntervalBarRenderer
             value1 = value0;
         }
 
-        double rectStart = calculateBarW0(plot, orientation, dataArea,
-                domainAxis, state, row, column);
-        double rectBreadth = state.getBarWidth();
+        Task task= dataset.getTask(row, column);
+
+        double rectStart = (task.isSummaryTask() || task.isMilestone())
+                ? calculateSummaryTaskBarW0(plot, orientation, dataArea,
+                domainAxis, state, row, column) : calculateBarW0(plot,
+                orientation, dataArea, domainAxis, state, row, column);
+        double rectBreadth = (task.isSummaryTask() || task.isMilestone())
+                ? state.getBarWidth() / 2 : state.getBarWidth();
         double rectLength = Math.abs(java2dValue1 - java2dValue0);
 
         Rectangle2D bar = null;
         RectangleEdge barBase = null;
         if (orientation == PlotOrientation.HORIZONTAL) {
-            bar = new Rectangle2D.Double(java2dValue0, rectStart, rectLength,
-                    rectBreadth);
+            if (task.isMilestone()) {
+                bar = new Rectangle2D.Double(
+                        java2dValue0, rectStart, rectBreadth, rectBreadth
+                );
+            } else {
+                bar = new Rectangle2D.Double(java2dValue0, rectStart, rectLength,
+                        rectBreadth);
+            }
             barBase = RectangleEdge.LEFT;
         }
         else if (orientation == PlotOrientation.VERTICAL) {
-            bar = new Rectangle2D.Double(rectStart, java2dValue1, rectBreadth,
-                    rectLength);
+            if (task.isMilestone()) {
+                bar = new Rectangle2D.Double(
+                        rectStart, java2dValue1, rectBreadth, rectBreadth
+                );
+            } else {
+                bar = new Rectangle2D.Double(rectStart, java2dValue1, rectBreadth,
+                        rectLength);
+            }
             barBase = RectangleEdge.BOTTOM;
         }
 
@@ -477,7 +496,7 @@ public class GanttRenderer extends IntervalBarRenderer
         Number percent = dataset.getPercentComplete(row, column);
         double start = getStartPercent();
         double end = getEndPercent();
-        if (percent != null) {
+        if (percent != null && !task.isSummaryTask() && !task.isMilestone()) {
             double p = percent.doubleValue();
             if (plot.getOrientation() == PlotOrientation.HORIZONTAL) {
                 completeBar = new Rectangle2D.Double(java2dValue0,
@@ -498,11 +517,20 @@ public class GanttRenderer extends IntervalBarRenderer
 
         }
 
-        if (getShadowsVisible()) {
-            getBarPainter().paintBarShadow(g2, this, row, column, bar,
-                    barBase, true);
+        if (task.isSummaryTask()) {
+            g2.setColor(Color.BLACK);
+            g2.fill(bar);
+        } else if (task.isMilestone()) {
+            g2.setColor(Color.BLACK);
+            g2.fill(ShapeUtilities.rotateShape(bar, Math.toRadians(45),
+                    (float) java2dValue0, (float) rectStart));
+        } else {
+            if (getShadowsVisible()) {
+                getBarPainter().paintBarShadow(g2, this, row, column, bar,
+                        barBase, true);
+            }
+            getBarPainter().paintBar(g2, this, row, column, bar, barBase);
         }
-        getBarPainter().paintBar(g2, this, row, column, bar, barBase);
 
         if (completeBar != null) {
             g2.setPaint(getCompletePaint());
@@ -521,7 +549,12 @@ public class GanttRenderer extends IntervalBarRenderer
             if (stroke != null && paint != null) {
                 g2.setStroke(stroke);
                 g2.setPaint(paint);
-                g2.draw(bar);
+                if (task.isMilestone()) {
+                    g2.draw(ShapeUtilities.rotateShape(bar, Math.toRadians(45),
+                            (float) java2dValue0, (float) rectStart));
+                } else {
+                    g2.draw(bar);
+                }
             }
         }
 

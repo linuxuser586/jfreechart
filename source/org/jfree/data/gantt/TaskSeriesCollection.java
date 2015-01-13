@@ -632,6 +632,34 @@ public class TaskSeriesCollection extends AbstractSeriesDataset
     }
 
     /**
+     * Returns a task.
+     *
+     * @param rowKey    the series.
+     * @param columnKey the category.
+     * @return The task.
+     */
+    public Task getTask(Comparable rowKey, Comparable columnKey) {
+        int row = getRowIndex(rowKey);
+        TaskSeries series = (TaskSeries) this.data.get(row);
+
+        return series.get(columnKey.toString());
+    }
+
+    /**
+     * Returns a task.
+     *
+     * @param row    the row index (zero-based).
+     * @param column the column index (zero-based).
+     * @return The task.
+     */
+    public Task getTask(int row, int column) {
+        Comparable rowKey = getRowKey(row);
+        Comparable columnKey = getColumnKey(column);
+
+        return getTask(rowKey, columnKey);
+    }
+
+    /**
      * Called when a series belonging to the dataset changes.
      *
      * @param event  information about the change.

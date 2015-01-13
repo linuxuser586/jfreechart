@@ -179,4 +179,22 @@ public interface GanttCategoryDataset extends IntervalCategoryDataset {
     public Number getPercentComplete(Comparable rowKey, Comparable columnKey,
                                      int subinterval);
 
+    /**
+     * Returns a task.
+     *
+     * @param rowKey    the series.
+     * @param columnKey the category.
+     * @return The task.
+     */
+    public Task getTask(Comparable rowKey, Comparable columnKey);
+
+    /**
+     * Returns a task.
+     *
+     * @param row    the row index (zero-based).
+     * @param column the column index (zero-based).
+     * @return The task.
+     */
+    public Task getTask(int row, int column);
+
 }
