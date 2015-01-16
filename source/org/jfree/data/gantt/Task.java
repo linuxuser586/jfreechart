@@ -44,11 +44,15 @@
 
 package org.jfree.data.gantt;
 
+import java.awt.Color;
+import java.awt.Point;
+import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import org.jfree.chart.util.ParamChecks;
 
+import org.jfree.chart.util.ParamChecks;
 import org.jfree.data.time.SimpleTimePeriod;
 import org.jfree.data.time.TimePeriod;
 import org.jfree.util.ObjectUtilities;
@@ -75,6 +79,14 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
     /** Storage for the sub-tasks (if any). */
     private List subtasks;
 
+    private boolean isSummary;
+    
+    private boolean isMilestone;
+    
+    private List<Task> dependsOn;
+    
+    private Rectangle2D bar;
+
     /**
      * Creates a new task.
      *
@@ -87,7 +99,8 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
         this.description = description;
         this.duration = duration;
         this.percentComplete = null;
-        this.subtasks = new java.util.ArrayList();
+        this.subtasks = new ArrayList();
+        this.dependsOn = new ArrayList<Task>();
     }
 
     /**
@@ -206,6 +219,87 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
     }
 
     /**
+     * Determine if summary task or not.
+     * 
+     * @return summary flag.
+     */
+    public boolean isSummary() {
+        return isSummary;
+    }
+
+    /**
+     * Set summary task.
+     * 
+     * @param isSummary
+     */
+    public void setSummary(boolean isSummary) {
+        this.isSummary = isSummary;
+    }
+
+    /**
+     * Determine if milestone or not.
+     * 
+     * @return milestone flag.
+     */
+    public boolean isMilestone() {
+        return isMilestone;
+    }
+
+    /**
+     * Set milestone or not.
+     * 
+     * @param isMilestone
+     */
+    public void setMilestone(boolean isMilestone) {
+        this.isMilestone = isMilestone;
+    }
+
+    /**
+     * Get the dependency task.
+     * 
+     * @return the dependency task
+     */
+    public List<Task> getDependsOn() {
+        return dependsOn;
+    }
+
+    /**
+     * Set the dependency task.
+     * 
+     * @param dependsOn Dependency task
+     */
+    public void setDependsOn(List<Task> dependsOn) {
+        this.dependsOn = dependsOn;
+    }
+
+    /**
+     * Add a dependency task to the list.
+     * 
+     * @param dependsOn Dependency task
+     */
+    public void addDependsOn(Task dependsOn) {
+        this.dependsOn.add(dependsOn);
+    }
+
+    /**
+     * Get the task bar.
+     * 
+     * @return Bar
+     */
+    public Rectangle2D getBar() {
+        return bar;
+    }
+
+    /**
+     * Set the task bar.
+     * 
+     * @param bar
+     */
+    public void setBar(Rectangle2D bar) {
+        this.bar = bar;
+    }
+
+    /**
      * Tests this object for equality with an arbitrary object.
      *
      * @param object  the other object (<code>null</code> permitted).
@@ -235,6 +329,11 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "Task [description=" + description + "]";
     }
 
     /**

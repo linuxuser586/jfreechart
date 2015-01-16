@@ -1931,7 +1931,8 @@ class JFreeChartInfo extends ProjectInfo {
                 new Contributor("Hari", "-"),
                 new Contributor("Sam (oldman)", "-"),
                 new Contributor("Patrick Schlott", "-"),
-                new Contributor("Christoph Schroeder", "-")
+                new Contributor("Christoph Schroeder", "-"),
+                new Contributor("Barry Simons", "linuxuser586@gmail.com")
             }
         ));
 

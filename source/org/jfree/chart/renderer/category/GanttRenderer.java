@@ -55,10 +55,13 @@
 
 package org.jfree.chart.renderer.category;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Stroke;
+import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -75,6 +78,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.util.ParamChecks;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.gantt.GanttCategoryDataset;
+import org.jfree.data.gantt.Task;
 import org.jfree.io.SerialUtilities;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.util.PaintUtilities;
@@ -89,6 +93,13 @@ import org.jfree.util.PaintUtilities;
  */
 public class GanttRenderer extends IntervalBarRenderer
         implements Serializable {
+    
+    public enum Direction {
+        UP,
+        DOWN,
+        LEFT,
+        RIGHT;
+    }
 
     /** For serialization. */
     private static final long serialVersionUID = -4010349116350119512L;
@@ -98,6 +109,8 @@ public class GanttRenderer extends IntervalBarRenderer
 
     /** The paint for displaying the incomplete part of a task. */
     private transient Paint incompletePaint;
+    
+    private static final float DEFAULT_LINE_STROKE = 1.0f;
 
     /**
      * Controls the starting edge of the progress indicator (expressed as a
@@ -110,6 +123,12 @@ public class GanttRenderer extends IntervalBarRenderer
      * percentage of the overall bar width).
      */
     private double endPercent;
+    
+    private Color milestoneLineColor;
+    
+    private Color milestoneColor;
+    
+    private float dependencyLineStroke;
 
     /**
      * Creates a new renderer.
@@ -121,6 +140,9 @@ public class GanttRenderer extends IntervalBarRenderer
         this.incompletePaint = Color.red;
         this.startPercent = 0.35;
         this.endPercent = 0.65;
+        this.milestoneColor = Color.BLACK;
+        this.milestoneLineColor = Color.GRAY;
+        this.dependencyLineStroke = DEFAULT_LINE_STROKE;
     }
 
     /**
@@ -430,6 +452,7 @@ public class GanttRenderer extends IntervalBarRenderer
 
         PlotOrientation orientation = plot.getOrientation();
         RectangleEdge rangeAxisLocation = plot.getRangeAxisEdge();
+        Task task = dataset.getTask(row, column);
 
         // Y0
         Number value0 = dataset.getEndValue(row, column);
@@ -461,23 +484,40 @@ public class GanttRenderer extends IntervalBarRenderer
 
         Rectangle2D bar = null;
         RectangleEdge barBase = null;
+        double milestoneWidth = 0.0;
+        double arrowWidth = 0.0;
         if (orientation == PlotOrientation.HORIZONTAL) {
-            bar = new Rectangle2D.Double(java2dValue0, rectStart, rectLength,
-                    rectBreadth);
+            if (task.isMilestone()) {
+                bar = new Rectangle2D.Double(java2dValue0, rectStart + rectBreadth, rectBreadth,
+                        rectBreadth);
+                milestoneWidth  = rectBreadth * 0.6;
+            } else {
+                bar = new Rectangle2D.Double(java2dValue0, rectStart, rectLength,
+                        rectBreadth);
+            }
             barBase = RectangleEdge.LEFT;
+            arrowWidth = rectBreadth * 0.5;
         }
         else if (orientation == PlotOrientation.VERTICAL) {
-            bar = new Rectangle2D.Double(rectStart, java2dValue1, rectBreadth,
-                    rectLength);
+            if (task.isMilestone()) {
+                bar = new Rectangle2D.Double(rectStart, java2dValue1, rectLength,
+                        rectLength);
+                milestoneWidth = rectLength * 0.6;
+            } else {
+                bar = new Rectangle2D.Double(rectStart, java2dValue1, rectBreadth,
+                        rectLength);
+            }
             barBase = RectangleEdge.BOTTOM;
+            arrowWidth = rectLength * 0.5;
         }
 
+        task.setBar(bar);
         Rectangle2D completeBar = null;
         Rectangle2D incompleteBar = null;
         Number percent = dataset.getPercentComplete(row, column);
         double start = getStartPercent();
         double end = getEndPercent();
-        if (percent != null) {
+        if (percent != null && !task.isMilestone() && !task.isSummary()) {
             double p = percent.doubleValue();
             if (plot.getOrientation() == PlotOrientation.HORIZONTAL) {
                 completeBar = new Rectangle2D.Double(java2dValue0,
@@ -498,30 +538,40 @@ public class GanttRenderer extends IntervalBarRenderer
 
         }
 
-        if (getShadowsVisible()) {
-            getBarPainter().paintBarShadow(g2, this, row, column, bar,
-                    barBase, true);
-        }
-        getBarPainter().paintBar(g2, this, row, column, bar, barBase);
-
-        if (completeBar != null) {
-            g2.setPaint(getCompletePaint());
-            g2.fill(completeBar);
-        }
-        if (incompleteBar != null) {
-            g2.setPaint(getIncompletePaint());
-            g2.fill(incompleteBar);
-        }
-
-        // draw the outline...
-        if (isDrawBarOutline()
-                && state.getBarWidth() > BAR_OUTLINE_WIDTH_THRESHOLD) {
-            Stroke stroke = getItemOutlineStroke(row, column);
-            Paint paint = getItemOutlinePaint(row, column);
-            if (stroke != null && paint != null) {
-                g2.setStroke(stroke);
-                g2.setPaint(paint);
-                g2.draw(bar);
+        if (task.isMilestone()) {
+            double offset = 0.0;
+            if (orientation == PlotOrientation.VERTICAL) {
+                offset = bar.getWidth() / 2;
+            } else {
+                offset = bar.getHeight() / 2;
+            }
+            drawMilestone(g2, orientation, bar.getX(), bar.getY(), offset, milestoneWidth);
+        } else {
+            if (getShadowsVisible()) {
+                getBarPainter().paintBarShadow(g2, this, row, column, bar,
+                        barBase, true);
+            }
+            getBarPainter().paintBar(g2, this, row, column, bar, barBase);
+    
+            if (completeBar != null) {
+                g2.setPaint(getCompletePaint());
+                g2.fill(completeBar);
+            }
+            if (incompleteBar != null) {
+                g2.setPaint(getIncompletePaint());
+                g2.fill(incompleteBar);
+            }
+    
+            // draw the outline...
+            if (isDrawBarOutline()
+                    && state.getBarWidth() > BAR_OUTLINE_WIDTH_THRESHOLD) {
+                Stroke stroke = getItemOutlineStroke(row, column);
+                Paint paint = getItemOutlinePaint(row, column);
+                if (stroke != null && paint != null) {
+                    g2.setStroke(stroke);
+                    g2.setPaint(paint);
+                    g2.draw(bar);
+                }
             }
         }
 
@@ -548,6 +598,10 @@ public class GanttRenderer extends IntervalBarRenderer
         if (entities != null) {
             addItemEntity(entities, dataset, row, column, bar);
         }
+
+        for (Task dependsOn : task.getDependsOn()) {
+            createDependency(g2, dependsOn.getBar(), task.getBar(), arrowWidth);
+        }
     }
 
     /**
@@ -570,6 +624,59 @@ public class GanttRenderer extends IntervalBarRenderer
             RectangleEdge edge) {
         return axis.getCategorySeriesMiddle(columnKey, rowKey, dataset,
                 getItemMargin(), area, edge);
+    }
+
+    /**
+     * Get the milestone line color.
+     * 
+     * @return Milestone line color.
+     */
+    public Color getMilestoneLineColor() {
+        return milestoneLineColor;
+    }
+
+    /**
+     * Set the milestone line color.
+     * 
+     * @param milestoneLineColor
+     */
+    public void setMilestoneLineColor(Color milestoneLineColor) {
+        this.milestoneLineColor = milestoneLineColor;
+    }
+
+    /**
+     * Get the milestone color.
+     * 
+     * @return Milestone color.
+     */
+    public Color getMilestoneColor() {
+        return milestoneColor;
+    }
+
+    /**
+     * Set the milestone color.
+     * 
+     * @param milestoneColor
+     */
+    public void setMilestoneColor(Color milestoneColor) {
+        this.milestoneColor = milestoneColor;
+    }
+
+    /**
+     * Get the dependency line stroke.
+     * @return line stroke.
+     */
+    public float getDependencyLineStroke() {
+        return dependencyLineStroke;
+    }
+
+    /**
+     * Set the dependency line stroke.
+     * 
+     * @param dependencyLineStroke
+     */
+    public void setDependencyLineStroke(float dependencyLineStroke) {
+        this.dependencyLineStroke = dependencyLineStroke;
     }
 
     /**
@@ -629,6 +736,119 @@ public class GanttRenderer extends IntervalBarRenderer
         stream.defaultReadObject();
         this.completePaint = SerialUtilities.readPaint(stream);
         this.incompletePaint = SerialUtilities.readPaint(stream);
+    }
+    
+    private void drawMilestone(Graphics2D g2, PlotOrientation orientation, 
+            double x, double y, double offset, double size) {
+        g2.setColor(getMilestoneColor());
+        Path2D.Double path = new Path2D.Double();
+        if (orientation == PlotOrientation.HORIZONTAL) {
+            x += offset;
+        } else {
+            y += offset;
+        }
+        path.moveTo(x, y);
+        x += size;
+        y += size;
+        path.lineTo(x, y);
+        x -= size;
+        y += size;
+        path.lineTo(x, y);
+        x -= size;
+        y -= size;
+        path.lineTo(x, y);
+        x += size;
+        y -= size;
+        path.lineTo(x, y);
+        g2.fill(path);
+    }
+
+    /**
+     * Creates a dependency between two tasks.
+     * 
+     * @param g2 The graphics device.
+     * @param parent The depends on task.
+     * @param child The dependent task.
+     */
+    private void createDependency(Graphics2D g2, Rectangle2D parent, Rectangle2D child, double size) {
+        double x1 = parent.getX() + parent.getWidth();
+        double y1 = parent.getY() + parent.getHeight() / 2;
+        double x2 = child.getX();
+        double y2 = child.getY();
+        g2.setColor(getMilestoneLineColor());
+        g2.setStroke(new BasicStroke(getDependencyLineStroke()));
+        double offset = parent.getHeight() / 2;
+        g2.draw(new Line2D.Double(x1, y1, x1 + offset, y1));
+        int digits = 100000;
+        int r1 = new Double(x1 * digits).intValue();
+        int r2 = new Double(x2 * digits).intValue();
+        Direction direction = Direction.UP;
+        if (r1 < r2) {
+            x1 = x1 + offset;
+            y2 += child.getHeight() / 2;
+            g2.draw(new Line2D.Double(x1, y1, x1, y2));
+            g2.draw(new Line2D.Double(x1, y2, x2, y2));
+            direction = Direction.RIGHT;
+        } else if (r1 > r2) {
+            x1 = x1 + offset;
+            y2 += child.getHeight() / 2;
+            x2 = child.getX() + child.getWidth();
+            g2.draw(new Line2D.Double(x1, y1, x1, y2));
+            g2.draw(new Line2D.Double(x1, y2, x2, y2));
+            direction = Direction.LEFT;
+        } else {
+            x1 += offset;
+            x2 += offset;
+            g2.draw(new Line2D.Double(x1, y1, x2, y2));
+            direction = Direction.DOWN;
+        }
+        drawArrowHead(g2, x2, y2, size, direction);
+    }
+    
+    private void drawArrowHead(Graphics2D g2, double x, double y, double size, Direction direction) {
+        g2.setColor(getMilestoneLineColor());
+        Path2D.Double path = new Path2D.Double();
+        path.moveTo(x, y);
+        if (direction == Direction.LEFT) {
+            x += size;
+            y -= size;
+            path.lineTo(x, y);
+            y += size *2;
+            path.lineTo(x, y);
+            x -= size;
+            y -= size;
+            path.lineTo(x, y);
+        } else if (direction == Direction.DOWN) {
+            x += size;
+            y -= size;
+            path.lineTo(x, y);
+            x -= size *2;
+            path.lineTo(x, y);
+            x += size;
+            y += size;
+            path.lineTo(x, y);
+        } else if (direction == Direction.RIGHT) {
+            x -= size;
+            y -= size;
+            path.lineTo(x, y);
+            y += size *2;
+            path.lineTo(x, y);
+            x += size;
+            y -= size;
+            path.lineTo(x, y);
+            
+        } else {
+            x += size;
+            y += size;
+            path.lineTo(x, y);
+            x -= size *2;
+            path.lineTo(x, y);
+            x -= size;
+            y -= size;
+            path.lineTo(x, y);
+            
+        }
+        g2.fill(path);
     }
 
 }

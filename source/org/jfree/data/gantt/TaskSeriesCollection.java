@@ -54,8 +54,8 @@ package org.jfree.data.gantt;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
-import org.jfree.chart.util.ParamChecks;
 
+import org.jfree.chart.util.ParamChecks;
 import org.jfree.data.general.AbstractSeriesDataset;
 import org.jfree.data.general.SeriesChangeEvent;
 import org.jfree.data.time.TimePeriod;
@@ -700,6 +700,20 @@ public class TaskSeriesCollection extends AbstractSeriesDataset
         clone.data = (List) ObjectUtilities.deepClone(this.data);
         clone.keys = new java.util.ArrayList(this.keys);
         return clone;
+    }
+
+    @Override
+    public Task getTask(Comparable rowKey, Comparable columnKey) {
+        int row = getRowIndex(rowKey);
+        TaskSeries series = (TaskSeries) data.get(row);
+        return series.get(columnKey.toString());
+    }
+
+    @Override
+    public Task getTask(int row, int column) {
+        Comparable rowKey = getRowKey(row);
+        Comparable columnKey = getColumnKey(column);
+        return getTask(rowKey, columnKey);
     }
 
 }

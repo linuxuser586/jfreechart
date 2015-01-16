@@ -634,4 +634,14 @@ public class SlidingGanttCategoryDataset extends AbstractDataset
         return clone;
     }
 
+    @Override
+    public Task getTask(Comparable rowKey, Comparable columnKey) {
+        return getUnderlyingDataset().getTask(rowKey, columnKey);
+    }
+
+    @Override
+    public Task getTask(int row, int column) {
+        return getUnderlyingDataset().getTask(row, column);
+    }
+
 }
