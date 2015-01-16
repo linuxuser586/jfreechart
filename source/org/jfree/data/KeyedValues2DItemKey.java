@@ -45,7 +45,7 @@ import org.jfree.chart.util.ParamChecks;
 import org.jfree.util.ObjectUtilities;
 
 /**
- * An object that references one data item in a {@link KeyedValues3D} data
+ * An object that references one data item in a {@link KeyedValues2D} data
  * structure.  Instances of this class are immutable (subject to the caller
  * using series, row and column keys that are immutable).
  * 

@@ -10,7 +10,7 @@
 
     <artifactId>jfreechart</artifactId>
     <groupId>org.jfree</groupId>
-    <version>1.0.19</version>
+    <version>1.0.20-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <!-- this is required to host it on Sonatype's OSSRH -->
@@ -134,6 +134,15 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven.javadoc.version}</version>
+                <configuration>
+                    <excludePackageNames>org.jfree.data.json.impl</excludePackageNames>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.10</version>
                 <configuration>
@@ -215,7 +224,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
+                <version>${maven.javadoc.version}</version>
             </plugin>
 
             <plugin>
@@ -242,6 +251,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.source.level>1.6</project.source.level>
         <project.target.level>1.6</project.target.level>
+        <maven.javadoc.version>2.10.1</maven.javadoc.version>
     </properties>
 
   <profiles>
@@ -253,7 +263,7 @@
             <inherited>true</inherited>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.9.1</version>
+            <version>${maven.javadoc.version}</version>
             <executions>
               <execution>
                 <id>attach-javadoc</id>

@@ -120,7 +120,7 @@ public class JSONUtils {
      * Returns a string containing the data in JSON format.  The format is...
      * <br><br>
      * Note that this method can be used with instances of 
-     * {@link CategorDataset}.
+     * {@link CategoryDataset}.
      * 
      * @param data  the data ({@code null} not permitted).
      * 
