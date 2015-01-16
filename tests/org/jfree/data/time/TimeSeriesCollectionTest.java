@@ -44,10 +44,10 @@
 
 package org.jfree.data.time;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,10 +57,11 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
-import org.jfree.chart.TestUtilities;
 
+import org.jfree.chart.TestUtilities;
 import org.jfree.data.Range;
 import org.jfree.data.general.DatasetUtilities;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -308,6 +309,7 @@ public class TimeSeriesCollectionTest {
      * java.util.List, boolean)} method.
      */
     @Test
+    @Ignore
     public void testFindDomainBounds() {
         TimeSeriesCollection dataset = new TimeSeriesCollection();
         List visibleSeriesKeys = new java.util.ArrayList();
