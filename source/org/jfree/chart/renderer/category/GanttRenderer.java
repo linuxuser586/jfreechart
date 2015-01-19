@@ -67,6 +67,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.ValueAxis;
@@ -129,6 +131,10 @@ public class GanttRenderer extends IntervalBarRenderer
     private Color milestoneColor;
     
     private float dependencyLineStroke;
+    
+    private double arrowWidth;
+    
+    private List<Task> tasks;
 
     /**
      * Creates a new renderer.
@@ -143,6 +149,8 @@ public class GanttRenderer extends IntervalBarRenderer
         this.milestoneColor = Color.BLACK;
         this.milestoneLineColor = Color.GRAY;
         this.dependencyLineStroke = DEFAULT_LINE_STROKE;
+        this.arrowWidth = 2.5;
+        this.tasks = new ArrayList<Task>();
     }
 
     /**
@@ -485,7 +493,6 @@ public class GanttRenderer extends IntervalBarRenderer
         Rectangle2D bar = null;
         RectangleEdge barBase = null;
         double milestoneWidth = 0.0;
-        double arrowWidth = 0.0;
         if (orientation == PlotOrientation.HORIZONTAL) {
             if (task.isMilestone()) {
                 bar = new Rectangle2D.Double(java2dValue0, rectStart + rectBreadth, rectBreadth,
@@ -496,7 +503,10 @@ public class GanttRenderer extends IntervalBarRenderer
                         rectBreadth);
             }
             barBase = RectangleEdge.LEFT;
-            arrowWidth = rectBreadth * 0.5;
+            double width = rectBreadth * 0.5;
+            if (width > arrowWidth) {
+                arrowWidth = width;
+            }
         }
         else if (orientation == PlotOrientation.VERTICAL) {
             if (task.isMilestone()) {
@@ -598,10 +608,8 @@ public class GanttRenderer extends IntervalBarRenderer
         if (entities != null) {
             addItemEntity(entities, dataset, row, column, bar);
         }
-
-        for (Task dependsOn : task.getDependsOn()) {
-            createDependency(g2, dependsOn.getBar(), task.getBar(), arrowWidth);
-        }
+        
+        tasks.add(task);
     }
 
     /**
@@ -677,6 +685,20 @@ public class GanttRenderer extends IntervalBarRenderer
      */
     public void setDependencyLineStroke(float dependencyLineStroke) {
         this.dependencyLineStroke = dependencyLineStroke;
+    }
+
+    /**
+     * Draw the dependencies between the tasks. This must be called after all
+     * tasks have been created or it will not draw the dependencies.
+     * 
+     * @param g2 The graphics device.
+     */
+    public void drawDependencies(Graphics2D g2) {
+        for (Task task : tasks) {
+            for (Task dependsOn : task.getDependsOn()) {
+                createDependency(g2, dependsOn.getBar(), task.getBar(), arrowWidth);
+            }
+        }
     }
 
     /**
@@ -780,24 +802,45 @@ public class GanttRenderer extends IntervalBarRenderer
         double offset = parent.getHeight() / 2;
         g2.draw(new Line2D.Double(x1, y1, x1 + offset, y1));
         int digits = 100000;
-        int r1 = new Double(x1 * digits).intValue();
-        int r2 = new Double(x2 * digits).intValue();
+        int x1Round = new Double(x1 * digits).intValue();
+        int x2Round = new Double(child.getX() * digits).intValue();
+        int y1Round = new Double(parent.getY() * digits).intValue();
+        int y2Round = new Double(child.getY() * digits).intValue();
         Direction direction = Direction.UP;
-        if (r1 < r2) {
-            x1 = x1 + offset;
+        x1 = x1 + offset;
+        if (x1Round < x2Round) {
             y2 += child.getHeight() / 2;
             g2.draw(new Line2D.Double(x1, y1, x1, y2));
             g2.draw(new Line2D.Double(x1, y2, x2, y2));
             direction = Direction.RIGHT;
-        } else if (r1 > r2) {
-            x1 = x1 + offset;
+        } else if (x1Round > x2Round && y1Round < y2Round) {
             y2 += child.getHeight() / 2;
             x2 = child.getX() + child.getWidth();
             g2.draw(new Line2D.Double(x1, y1, x1, y2));
             g2.draw(new Line2D.Double(x1, y2, x2, y2));
             direction = Direction.LEFT;
+        } else if (x1Round > x2Round && y1Round > y2Round) {
+            x2 = x1;
+            y2 = child.getY() + child.getHeight() + offset;
+            // up
+            g2.draw(new Line2D.Double(x1, y1, x2, y2));
+            x1 = x2;
+            y1 = y2;
+            x2 = child.getX() - offset * 2;
+            // left
+            g2.draw(new Line2D.Double(x1, y1, x2, y2));
+            x1 = x2;
+            y1 = y2;
+            y2 = child.getY() + child.getHeight() / 2;
+            // up
+            g2.draw(new Line2D.Double(x1, y1, x1, y2));
+            x1 = x2;
+            y1 = y2;
+            x2 = child.getX();
+            // right
+            g2.draw(new Line2D.Double(x1, y1, x2, y2));
+            direction = Direction.RIGHT;
         } else {
-            x1 += offset;
             x2 += offset;
             g2.draw(new Line2D.Double(x1, y1, x2, y2));
             direction = Direction.DOWN;

@@ -217,6 +217,7 @@ import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeMap;
+
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.LegendItemCollection;
 import org.jfree.chart.annotations.Annotation;
@@ -240,6 +241,7 @@ import org.jfree.chart.event.RendererChangeListener;
 import org.jfree.chart.renderer.category.AbstractCategoryItemRenderer;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.chart.renderer.category.CategoryItemRendererState;
+import org.jfree.chart.renderer.category.GanttRenderer;
 import org.jfree.chart.util.CloneUtils;
 import org.jfree.chart.util.ParamChecks;
 import org.jfree.chart.util.ResourceBundleWrapper;
@@ -3915,6 +3917,10 @@ public class CategoryPlot extends Plot implements ValueAxisPlot, Pannable,
                         }
                     }
                 }
+            }
+            if (renderer instanceof GanttRenderer) {
+                final GanttRenderer ganttRenderer = (GanttRenderer) renderer;
+                ganttRenderer.drawDependencies(g2);
             }
         }
         return foundData;
