@@ -66,6 +66,8 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
 
     /** For serialization. */
     private static final long serialVersionUID = 1094303785346988894L;
+    
+    private static final String INDENT = "    ";
 
     /** The task description. */
     private String description;
@@ -85,6 +87,8 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
     
     private List<Task> dependsOn;
     
+    private List<Task> subtaskOf;
+    
     private Rectangle2D bar;
 
     /**
@@ -101,6 +105,7 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
         this.percentComplete = null;
         this.subtasks = new ArrayList();
         this.dependsOn = new ArrayList<Task>();
+        this.subtaskOf = new ArrayList<Task>();
     }
 
     /**
@@ -264,21 +269,31 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
     }
 
     /**
-     * Set the dependency task.
-     * 
-     * @param dependsOn Dependency task
-     */
-    public void setDependsOn(List<Task> dependsOn) {
-        this.dependsOn = dependsOn;
-    }
-
-    /**
      * Add a dependency task to the list.
      * 
      * @param dependsOn Dependency task
      */
     public void addDependsOn(Task dependsOn) {
         this.dependsOn.add(dependsOn);
+    }
+
+    /**
+     * Get subtasks displayed below summary task.
+     * 
+     * @return subtasks.
+     */
+    public List<Task> getSubtaskOf() {
+        return subtaskOf;
+    }
+
+    /**
+     * Add subtasks displayed below summary task.
+     * 
+     * @param subtaskOf
+     */
+    public void addSubtaskOf(Task subtaskOf) {
+        this.subtaskOf.add(subtaskOf);
+        description = INDENT + description;
     }
 
     /**

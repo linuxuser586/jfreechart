@@ -135,6 +135,9 @@ import java.util.Locale;
 
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryAxis3D;
+import org.jfree.chart.axis.CategoryLabelPosition;
+import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.axis.CategoryLabelWidthType;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberAxis3D;
@@ -203,6 +206,8 @@ import org.jfree.chart.urls.XYURLGenerator;
 import org.jfree.chart.util.ParamChecks;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.IntervalCategoryDataset;
+import org.jfree.data.gantt.GanttCategoryDataset;
+import org.jfree.data.gantt.Task;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.general.PieDataset;
 import org.jfree.data.general.WaferMapDataset;
@@ -214,7 +219,9 @@ import org.jfree.data.xy.TableXYDataset;
 import org.jfree.data.xy.WindDataset;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYZDataset;
+import org.jfree.text.TextBlockAnchor;
 import org.jfree.ui.Layer;
+import org.jfree.ui.RectangleAnchor;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
 import org.jfree.ui.TextAnchor;
@@ -1529,6 +1536,36 @@ public abstract class ChartFactory {
         CategoryPlot plot = new CategoryPlot(dataset, categoryAxis, dateAxis,
                 renderer);
         plot.setOrientation(PlotOrientation.HORIZONTAL);
+
+        int columnCount = dataset.getColumnCount();
+        int rowCount = dataset.getRowCount();
+        if (dataset instanceof GanttCategoryDataset) {
+            GanttCategoryDataset ganttDataset = (GanttCategoryDataset) dataset;
+            for (int i = 0; i < columnCount; i++) {
+                for (int j = 0; j < rowCount; j++) {
+                    Task task = ganttDataset.getTask(j, i);
+                    if (task != null) {
+                        Font font = plot.getDomainAxis().getTickLabelFont();
+                        if (task.isSummary()) {
+                            plot.getDomainAxis().setTickLabelFont(
+                                    task.getDescription(),
+                                    font.deriveFont(Font.BOLD, 14));
+                        } else if (task.isMilestone()) {
+                            plot.getDomainAxis().setTickLabelFont(
+                                    task.getDescription(),
+                                    font.deriveFont(Font.ITALIC));
+                        }
+                    }
+                }
+            }
+        }
+
+        CategoryLabelPositions positions = plot.getDomainAxis().getCategoryLabelPositions();
+        CategoryLabelPosition left =  new CategoryLabelPosition(
+                RectangleAnchor.LEFT, TextBlockAnchor.CENTER_LEFT,
+                CategoryLabelWidthType.RANGE, 0.30f);
+        positions = CategoryLabelPositions.replaceLeftPosition(positions, left);
+        plot.getDomainAxis().setCategoryLabelPositions(positions);
         JFreeChart chart = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT,
                 plot, legend);
         currentTheme.apply(chart);

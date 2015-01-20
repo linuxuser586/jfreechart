@@ -57,6 +57,7 @@ package org.jfree.chart.renderer.category;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Stroke;
@@ -135,6 +136,8 @@ public class GanttRenderer extends IntervalBarRenderer
     private double arrowWidth;
     
     private List<Task> tasks;
+    
+    private Task task;
 
     /**
      * Creates a new renderer.
@@ -460,7 +463,7 @@ public class GanttRenderer extends IntervalBarRenderer
 
         PlotOrientation orientation = plot.getOrientation();
         RectangleEdge rangeAxisLocation = plot.getRangeAxisEdge();
-        Task task = dataset.getTask(row, column);
+        task = dataset.getTask(row, column);
 
         // Y0
         Number value0 = dataset.getEndValue(row, column);
@@ -527,7 +530,7 @@ public class GanttRenderer extends IntervalBarRenderer
         Number percent = dataset.getPercentComplete(row, column);
         double start = getStartPercent();
         double end = getEndPercent();
-        if (percent != null && !task.isMilestone() && !task.isSummary()) {
+        if (percent != null && !task.isMilestone()) {
             double p = percent.doubleValue();
             if (plot.getOrientation() == PlotOrientation.HORIZONTAL) {
                 completeBar = new Rectangle2D.Double(java2dValue0,
@@ -608,7 +611,6 @@ public class GanttRenderer extends IntervalBarRenderer
         if (entities != null) {
             addItemEntity(entities, dataset, row, column, bar);
         }
-        
         tasks.add(task);
     }
 
@@ -696,7 +698,8 @@ public class GanttRenderer extends IntervalBarRenderer
     public void drawDependencies(Graphics2D g2) {
         for (Task task : tasks) {
             for (Task dependsOn : task.getDependsOn()) {
-                createDependency(g2, dependsOn.getBar(), task.getBar(), arrowWidth);
+                createDependency(g2, dependsOn.getBar(), task.getBar(),
+                        arrowWidth, dependsOn.isMilestone(), task.isMilestone());
             }
         }
     }
@@ -730,6 +733,15 @@ public class GanttRenderer extends IntervalBarRenderer
             return false;
         }
         return super.equals(obj);
+    }
+
+    @Override
+    public Paint getItemPaint(int row, int column) {
+        if (task != null && task.isSummary()) {
+            // TODO: make this work with lookupSeriesPaint
+            return Color.BLACK;
+        }
+        return lookupSeriesPaint(row);
     }
 
     /**
@@ -791,37 +803,80 @@ public class GanttRenderer extends IntervalBarRenderer
      * @param g2 The graphics device.
      * @param parent The depends on task.
      * @param child The dependent task.
+     * @param size The diamond size.
+     * @param isParentMilestone Parent is milestone or not
+     * @param isChileMilestone Child is milestone or not
      */
-    private void createDependency(Graphics2D g2, Rectangle2D parent, Rectangle2D child, double size) {
-        double x1 = parent.getX() + parent.getWidth();
-        double y1 = parent.getY() + parent.getHeight() / 2;
-        double x2 = child.getX();
-        double y2 = child.getY();
+    private void createDependency(Graphics2D g2, Rectangle2D parent,
+            Rectangle2D child, double size, boolean isParentMilestone,
+            boolean isChildMilestone) {
+        double x1 = 0.0;
+        double y1 = 0.0;
+        double x2 = 0.0;
+        double y2 = 0.0;
         g2.setColor(getMilestoneLineColor());
         g2.setStroke(new BasicStroke(getDependencyLineStroke()));
         double offset = parent.getHeight() / 2;
-        g2.draw(new Line2D.Double(x1, y1, x1 + offset, y1));
         int digits = 100000;
-        int x1Round = new Double(x1 * digits).intValue();
+        int x1Round = new Double((parent.getX() + parent.getWidth()) * digits)
+                .intValue();
         int x2Round = new Double(child.getX() * digits).intValue();
         int y1Round = new Double(parent.getY() * digits).intValue();
         int y2Round = new Double(child.getY() * digits).intValue();
-        Direction direction = Direction.UP;
-        x1 = x1 + offset;
-        if (x1Round < x2Round) {
-            y2 += child.getHeight() / 2;
+        if (isParentMilestone && y1Round < y2Round) {
+            x1 = parent.getX() + offset;
+            y1 = parent.getY() + parent.getHeight() + 3;
+            x2 = x1;
+            y2 = child.getY() + offset;
             g2.draw(new Line2D.Double(x1, y1, x1, y2));
-            g2.draw(new Line2D.Double(x1, y2, x2, y2));
+            x1 = x2;
+            y1 = y2;
+        } else {
+            x1 = parent.getX() + parent.getWidth();
+            if (isParentMilestone) {
+                x1 += 1;
+            }
+            y1 = parent.getY() + offset + 1;
+            x2 = x1 + offset;
+            y2 = y1;
+            g2.draw(new Line2D.Double(x1, y1, x2, y2));
+            x1 = x2;
+            y1 = y2;
+        }
+        Direction direction = Direction.UP;
+        if (x1Round < x2Round) {
+            // child is down and right of parent
+            x2 = x1;
+            y2 = child.getY() + offset;
+            if (isChildMilestone) {
+                y2 += 1;
+            }
+            g2.draw(new Line2D.Double(x1, y1, x2, y2));
+            x1 = x2;
+            y1 = y2;
+            x2 = child.getX() - 1;
+            g2.draw(new Line2D.Double(x1, y1, x2, y2));
             direction = Direction.RIGHT;
         } else if (x1Round > x2Round && y1Round < y2Round) {
-            y2 += child.getHeight() / 2;
+            // child is down and left of parent
+            x2 = x1;
+            y2 = child.getY() + offset;
+            if (isChildMilestone) {
+                y2 += 1;
+            }
+            g2.draw(new Line2D.Double(x1, y1, x2, y2));
+            x1 = x2;
+            y1 = y2;
             x2 = child.getX() + child.getWidth();
-            g2.draw(new Line2D.Double(x1, y1, x1, y2));
-            g2.draw(new Line2D.Double(x1, y2, x2, y2));
+            if (isChildMilestone) {
+                x2 += 1;
+            }
+            g2.draw(new Line2D.Double(x1, y1, x2, y2));
             direction = Direction.LEFT;
         } else if (x1Round > x2Round && y1Round > y2Round) {
+            // child is up and starts left of parent
             x2 = x1;
-            y2 = child.getY() + child.getHeight() + offset;
+            y2 = child.getY() + child.getHeight() + offset - 1;
             // up
             g2.draw(new Line2D.Double(x1, y1, x2, y2));
             x1 = x2;
@@ -841,7 +896,8 @@ public class GanttRenderer extends IntervalBarRenderer
             g2.draw(new Line2D.Double(x1, y1, x2, y2));
             direction = Direction.RIGHT;
         } else {
-            x2 += offset;
+            x2 = x1;
+            y2 = child.getY();
             g2.draw(new Line2D.Double(x1, y1, x2, y2));
             direction = Direction.DOWN;
         }
