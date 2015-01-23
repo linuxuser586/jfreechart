@@ -1537,23 +1537,25 @@ public abstract class ChartFactory {
                 renderer);
         plot.setOrientation(PlotOrientation.HORIZONTAL);
 
-        int columnCount = dataset.getColumnCount();
-        int rowCount = dataset.getRowCount();
-        if (dataset instanceof GanttCategoryDataset) {
-            GanttCategoryDataset ganttDataset = (GanttCategoryDataset) dataset;
-            for (int i = 0; i < columnCount; i++) {
-                for (int j = 0; j < rowCount; j++) {
-                    Task task = ganttDataset.getTask(j, i);
-                    if (task != null) {
-                        Font font = plot.getDomainAxis().getTickLabelFont();
-                        if (task.isSummary()) {
-                            plot.getDomainAxis().setTickLabelFont(
-                                    task.getDescription(),
-                                    font.deriveFont(Font.BOLD, 14));
-                        } else if (task.isMilestone()) {
-                            plot.getDomainAxis().setTickLabelFont(
-                                    task.getDescription(),
-                                    font.deriveFont(Font.ITALIC));
+        if (dataset != null) {
+            int columnCount = dataset.getColumnCount();
+            int rowCount = dataset.getRowCount();
+            if (dataset instanceof GanttCategoryDataset) {
+                GanttCategoryDataset ganttDataset = (GanttCategoryDataset) dataset;
+                for (int i = 0; i < columnCount; i++) {
+                    for (int j = 0; j < rowCount; j++) {
+                        Task task = ganttDataset.getTask(j, i);
+                        if (task != null) {
+                            Font font = plot.getDomainAxis().getTickLabelFont();
+                            if (task.isSummary()) {
+                                plot.getDomainAxis().setTickLabelFont(
+                                        task.getDescription(),
+                                        font.deriveFont(Font.BOLD, 14));
+                            } else if (task.isMilestone()) {
+                                plot.getDomainAxis().setTickLabelFont(
+                                        task.getDescription(),
+                                        font.deriveFont(Font.ITALIC));
+                            }
                         }
                     }
                 }

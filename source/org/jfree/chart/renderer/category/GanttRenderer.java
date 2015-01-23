@@ -844,6 +844,7 @@ public class GanttRenderer extends IntervalBarRenderer
             y1 = y2;
         }
         Direction direction = Direction.UP;
+        int x2RoundEnd = new Double((child.getX() + child.getWidth()) * digits).intValue();
         if (x1Round < x2Round) {
             // child is down and right of parent
             x2 = x1;
@@ -857,7 +858,7 @@ public class GanttRenderer extends IntervalBarRenderer
             x2 = child.getX() - 1;
             g2.draw(new Line2D.Double(x1, y1, x2, y2));
             direction = Direction.RIGHT;
-        } else if (x1Round > x2Round && y1Round < y2Round) {
+        } else if (x2RoundEnd < x1Round && y1Round < y2Round) {
             // child is down and left of parent
             x2 = x1;
             y2 = child.getY() + offset;
