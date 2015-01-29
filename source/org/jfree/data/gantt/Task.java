@@ -85,6 +85,8 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
     
     private boolean isMilestone;
     
+    private boolean isCritical;
+    
     private List<Task> dependsOn;
     
     private List<Task> subtaskOf;
@@ -257,6 +259,24 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
      */
     public void setMilestone(boolean isMilestone) {
         this.isMilestone = isMilestone;
+    }
+
+    /**
+     * Determine if critical or not.
+     * 
+     * @return critical flag
+     */
+    public boolean isCritical() {
+        return isCritical;
+    }
+
+    /**
+     * Set critical task.
+     * 
+     * @param isCritical Critical flag
+     */
+    public void setCritical(boolean isCritical) {
+        this.isCritical = isCritical;
     }
 
     /**

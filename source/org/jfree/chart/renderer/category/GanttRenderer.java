@@ -57,7 +57,6 @@ package org.jfree.chart.renderer.category;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Stroke;
@@ -698,8 +697,11 @@ public class GanttRenderer extends IntervalBarRenderer
     public void drawDependencies(Graphics2D g2) {
         for (Task task : tasks) {
             for (Task dependsOn : task.getDependsOn()) {
-                createDependency(g2, dependsOn.getBar(), task.getBar(),
-                        arrowWidth, dependsOn.isMilestone(), task.isMilestone());
+                if (dependsOn != null) {
+                    createDependency(g2, dependsOn.getBar(), task.getBar(),
+                            arrowWidth, dependsOn.isMilestone(),
+                            task.isMilestone());
+                }
             }
         }
     }
@@ -810,6 +812,9 @@ public class GanttRenderer extends IntervalBarRenderer
     private void createDependency(Graphics2D g2, Rectangle2D parent,
             Rectangle2D child, double size, boolean isParentMilestone,
             boolean isChildMilestone) {
+        if (g2 == null || parent == null || child == null) {
+            return;
+        }
         double x1 = 0.0;
         double y1 = 0.0;
         double x2 = 0.0;
