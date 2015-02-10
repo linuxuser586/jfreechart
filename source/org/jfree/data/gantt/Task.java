@@ -274,6 +274,9 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
      * @return summary flag.
      */
     public boolean isSummary() {
+        if (!isSummary) {
+            isSummary = !subtasks.isEmpty();
+        }
         return isSummary;
     }
 
@@ -356,7 +359,8 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
      */
     public void addSubtaskOf(Task subtaskOf) {
         this.subtaskOf.add(subtaskOf);
-        description = INDENT + description;
+        subtaskOf.setSummary(true);
+        //description = INDENT + description;
     }
 
     /**

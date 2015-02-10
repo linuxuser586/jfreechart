@@ -302,6 +302,13 @@ public class BarRenderer extends AbstractCategoryItemRenderer
     private double shadowYOffset;
 
     /**
+     * The critical path paint.
+     * 
+     * @since 1.0.20
+     */
+    private transient Paint criticalPathPaint;
+
+    /**
      * Creates a new bar renderer with default settings.
      */
     public BarRenderer() {
@@ -322,6 +329,7 @@ public class BarRenderer extends AbstractCategoryItemRenderer
         this.shadowPaint = Color.gray;
         this.shadowXOffset = 4.0;
         this.shadowYOffset = 4.0;
+        this.criticalPathPaint = new Color(153,0,0);
     }
 
     /**
@@ -726,6 +734,28 @@ public class BarRenderer extends AbstractCategoryItemRenderer
     public double getUpperClip() {
         // TODO:  this attribute should be transferred to the renderer state.
         return this.upperClip;
+    }
+
+    /**
+     * Get the critical path paint.
+     * 
+     * @return Critial path paint.
+     * 
+     * @since 1.0.20
+     */
+    public Paint getCriticalPathPaint() {
+        return criticalPathPaint;
+    }
+
+    /**
+     * Set the critial path paint.
+     * 
+     * @param criticalPathPaint
+     * 
+     * @since 1.0.20
+     */
+    public void setCriticalPathPaint(Paint criticalPathPaint) {
+        this.criticalPathPaint = criticalPathPaint;
     }
 
     /**

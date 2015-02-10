@@ -497,7 +497,7 @@ public class GanttRenderer extends IntervalBarRenderer
         double milestoneWidth = 0.0;
         if (orientation == PlotOrientation.HORIZONTAL) {
             if (task.isMilestone()) {
-                bar = new Rectangle2D.Double(java2dValue0, rectStart + rectBreadth, rectBreadth,
+                bar = new Rectangle2D.Double(java2dValue0, rectStart - rectBreadth / 2, rectBreadth,
                         rectBreadth);
                 milestoneWidth  = rectBreadth * 0.6;
             } else {
@@ -533,19 +533,13 @@ public class GanttRenderer extends IntervalBarRenderer
             double p = percent.doubleValue();
             if (plot.getOrientation() == PlotOrientation.HORIZONTAL) {
                 completeBar = new Rectangle2D.Double(java2dValue0,
-                        rectStart + start * rectBreadth, rectLength * p,
-                        rectBreadth * (end - start));
-                incompleteBar = new Rectangle2D.Double(java2dValue0
-                        + rectLength * p, rectStart + start * rectBreadth,
-                        rectLength * (1 - p), rectBreadth * (end - start));
+                        rectStart, rectLength * p,
+                        rectBreadth);
             }
             else if (plot.getOrientation() == PlotOrientation.VERTICAL) {
                 completeBar = new Rectangle2D.Double(rectStart + start
                         * rectBreadth, java2dValue1 + rectLength * (1 - p),
                         rectBreadth * (end - start), rectLength * p);
-                incompleteBar = new Rectangle2D.Double(rectStart + start
-                        * rectBreadth, java2dValue1, rectBreadth * (end
-                        - start), rectLength * (1 - p));
             }
 
         }
@@ -558,6 +552,9 @@ public class GanttRenderer extends IntervalBarRenderer
                 offset = bar.getHeight() / 2;
             }
             drawMilestone(g2, orientation, bar.getX(), bar.getY(), offset, milestoneWidth);
+        } else if (task.isSummary()) {
+            drawSummaryTask(g2, orientation, bar.getMinX(), bar.getMinY(), bar.getWidth(), 
+                    bar.getHeight(), row, column);
         } else {
             if (getShadowsVisible()) {
                 getBarPainter().paintBarShadow(g2, this, row, column, bar,
@@ -739,9 +736,11 @@ public class GanttRenderer extends IntervalBarRenderer
 
     @Override
     public Paint getItemPaint(int row, int column) {
-        if (task != null && task.isSummary()) {
+        /*if (task != null && task.isSummary()) {
             // TODO: make this work with lookupSeriesPaint
             return Color.BLACK;
+        } else*/ if (task != null && task.isCritical()) {
+            return new Color(170,0,0);
         }
         return lookupSeriesPaint(row);
     }
@@ -952,6 +951,50 @@ public class GanttRenderer extends IntervalBarRenderer
             y -= size;
             path.lineTo(x, y);
             
+        }
+        g2.fill(path);
+    }
+    
+    private void drawSummaryTask(Graphics2D g2, PlotOrientation orientation, double x, 
+            double y, double width, double height, int row, int column) {
+        Paint paint = getItemPaint(row, column);
+        g2.setPaint(paint);
+        Path2D.Double path = new Path2D.Double();
+        if (width * 2 >= height) {
+            path.moveTo(x, y);
+            y += height;
+            path.lineTo(x, y);
+            x += height /2;
+            y -= height / 2;
+            path.lineTo(x, y);
+            x += width - height;
+            path.lineTo(x, y);
+            x += height / 2;
+            y += height / 2;
+            path.lineTo(x, y);
+            y -= height;
+            path.lineTo(x, y);
+            x -= width;
+            path.lineTo(x, y);
+        } else {
+            x += height * 0.25;
+            path.moveTo(x, y);
+            y += height * 0.75;
+            path.lineTo(x, y);
+            x -= height * 0.25;
+            path.lineTo(x, y);
+            x += height * 0.5;
+            y += height * 0.25;
+            path.lineTo(x, y);
+            x += height * 0.5;
+            y -= height * 0.25;
+            path.lineTo(x, y);
+            x -= height * 0.25;
+            path.lineTo(x, y);
+            y -= height * 0.75;
+            path.lineTo(x, y);
+            x -= height * 0.25;
+            path.lineTo(x, y);
         }
         g2.fill(path);
     }
