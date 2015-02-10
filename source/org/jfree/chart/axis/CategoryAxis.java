@@ -121,6 +121,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jfree.chart.LegendItem;
+import org.jfree.chart.LegendItemCollection;
 import org.jfree.chart.entity.CategoryLabelEntity;
 import org.jfree.chart.entity.EntityCollection;
 import org.jfree.chart.event.AxisChangeEvent;
@@ -198,6 +200,9 @@ public class CategoryAxis extends Axis implements Cloneable, Serializable {
 
     /** Storage for the category label URLs (if any). */
     private Map categoryLabelURLs;
+    
+    // TODO replace this with an api
+    private static final int OFFSET = 5;
     
     /**
      * Creates a new category axis with no label.
@@ -662,7 +667,7 @@ public class CategoryAxis extends Axis implements Cloneable, Serializable {
         }
         else if ((edge == RectangleEdge.LEFT)
                 || (edge == RectangleEdge.RIGHT)) {
-            result = area.getMinY() + area.getHeight() * getLowerMargin();
+            result =  area.getY() + getUpperMargin() + OFFSET;
         }
 
         double categorySize = calculateCategorySize(categoryCount, area, edge);
@@ -836,8 +841,7 @@ public class CategoryAxis extends Axis implements Cloneable, Serializable {
             available = area.getHeight();
         }
         if (categoryCount > 1) {
-            result = available * (1 - getLowerMargin() - getUpperMargin()
-                     - getCategoryMargin());
+            result = available - getLowerMargin() - getUpperMargin() - OFFSET;
             result = result / categoryCount;
         }
         else {
@@ -859,6 +863,7 @@ public class CategoryAxis extends Axis implements Cloneable, Serializable {
     protected double calculateCategoryGapSize(int categoryCount, 
             Rectangle2D area, RectangleEdge edge) {
 
+        // TODO: find out if this is method is needed
         double result = 0.0;
         double available = 0.0;
 
@@ -871,7 +876,7 @@ public class CategoryAxis extends Axis implements Cloneable, Serializable {
         }
 
         if (categoryCount > 1) {
-            result = available * getCategoryMargin() / (categoryCount - 1);
+            result = 0;//available * getCategoryMargin() / (categoryCount - 1);
         }
         return result;
     }

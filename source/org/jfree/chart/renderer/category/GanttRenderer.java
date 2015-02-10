@@ -823,9 +823,9 @@ public class GanttRenderer extends IntervalBarRenderer
         g2.setStroke(new BasicStroke(getDependencyLineStroke()));
         double offset = parent.getHeight() / 2;
         int digits = 100000;
-        int x1Round = new Double((parent.getX() + parent.getWidth()) * digits)
+        int x1Round = new Double((parent.getX() + parent.getWidth() + size) * digits)
                 .intValue();
-        int x2Round = new Double(child.getX() * digits).intValue();
+        int x2Round = new Double((child.getX() * digits) + size).intValue();
         int y1Round = new Double(parent.getY() * digits).intValue();
         int y2Round = new Double(child.getY() * digits).intValue();
         if (isParentMilestone && y1Round < y2Round) {
@@ -849,7 +849,7 @@ public class GanttRenderer extends IntervalBarRenderer
             y1 = y2;
         }
         Direction direction = Direction.UP;
-        int x2RoundEnd = new Double((child.getX() + child.getWidth()) * digits).intValue();
+        int x2RoundEnd = new Double((child.getX() + child.getWidth() + size + offset) * digits).intValue();
         if (x1Round < x2Round) {
             // child is down and right of parent
             x2 = x1;

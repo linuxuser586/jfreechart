@@ -71,6 +71,9 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
 
     /** The task description. */
     private String description;
+    
+    /** The task outline. */
+    private String outline;
 
     /** The time period for the task (estimated or actual). */
     private TimePeriod duration;
@@ -102,6 +105,27 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
      */
     public Task(String description, TimePeriod duration) {
         ParamChecks.nullNotPermitted(description, "description");
+        this.description = description;
+        this.outline = outline;
+        this.duration = duration;
+        this.percentComplete = null;
+        this.subtasks = new ArrayList();
+        this.dependsOn = new ArrayList<Task>();
+        this.subtaskOf = new ArrayList<Task>();
+    }
+
+    /**
+     * Creates a new task.
+     *
+     * @param description  the task description (<code>null</code> not
+     *                     permitted).
+     * @param outline  the task outline (<code>null</code> not
+     *                     permitted).
+     * @param duration  the task duration (<code>null</code> permitted).
+     */
+    public Task(String description, String outline, TimePeriod duration) {
+        ParamChecks.nullNotPermitted(description, "description");
+        ParamChecks.nullNotPermitted(outline, "outline");
         this.description = description;
         this.duration = duration;
         this.percentComplete = null;
@@ -139,6 +163,25 @@ public class Task implements Cloneable, PublicCloneable, Serializable {
     public void setDescription(String description) {
         ParamChecks.nullNotPermitted(description, "description");
         this.description = description;
+    }
+
+    /**
+     * Returns the task outline.
+     * 
+     * @return The task outline (never <code>null</code>.
+     */
+    public String getOutline() {
+        return outline;
+    }
+
+    /**
+     * Sets the task outline.
+     * 
+     * @param outline the outline (<code>null</code> not permitted).
+     */
+    public void setOutline(String outline) {
+        ParamChecks.nullNotPermitted(outline, "outline");
+        this.outline = outline;
     }
 
     /**
