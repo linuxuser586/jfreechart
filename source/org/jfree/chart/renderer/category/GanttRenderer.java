@@ -59,6 +59,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
@@ -494,16 +495,9 @@ public class GanttRenderer extends IntervalBarRenderer
 
         Rectangle2D bar = null;
         RectangleEdge barBase = null;
-        double milestoneWidth = 0.0;
         if (orientation == PlotOrientation.HORIZONTAL) {
-            if (task.isMilestone()) {
-                bar = new Rectangle2D.Double(java2dValue0, rectStart - rectBreadth / 2, rectBreadth,
-                        rectBreadth);
-                milestoneWidth  = rectBreadth * 0.6;
-            } else {
-                bar = new Rectangle2D.Double(java2dValue0, rectStart, rectLength,
-                        rectBreadth);
-            }
+            bar = new Rectangle2D.Double(java2dValue0, rectStart, rectLength,
+                    rectBreadth);
             barBase = RectangleEdge.LEFT;
             double width = rectBreadth * 0.5;
             if (width > arrowWidth) {
@@ -511,14 +505,8 @@ public class GanttRenderer extends IntervalBarRenderer
             }
         }
         else if (orientation == PlotOrientation.VERTICAL) {
-            if (task.isMilestone()) {
-                bar = new Rectangle2D.Double(rectStart, java2dValue1, rectLength,
-                        rectLength);
-                milestoneWidth = rectLength * 0.6;
-            } else {
-                bar = new Rectangle2D.Double(rectStart, java2dValue1, rectBreadth,
-                        rectLength);
-            }
+            bar = new Rectangle2D.Double(rectStart, java2dValue1, rectBreadth,
+                    rectLength);
             barBase = RectangleEdge.BOTTOM;
             arrowWidth = rectLength * 0.5;
         }
@@ -545,13 +533,7 @@ public class GanttRenderer extends IntervalBarRenderer
         }
 
         if (task.isMilestone()) {
-            double offset = 0.0;
-            if (orientation == PlotOrientation.VERTICAL) {
-                offset = bar.getWidth() / 2;
-            } else {
-                offset = bar.getHeight() / 2;
-            }
-            drawMilestone(g2, orientation, bar.getX(), bar.getY(), offset, milestoneWidth);
+            drawMilestone(g2, orientation, bar);
         } else if (task.isSummary()) {
             drawSummaryTask(g2, orientation, bar.getMinX(), bar.getMinY(), bar.getWidth(), 
                     bar.getHeight(), row, column);
@@ -773,27 +755,31 @@ public class GanttRenderer extends IntervalBarRenderer
         this.incompletePaint = SerialUtilities.readPaint(stream);
     }
     
-    private void drawMilestone(Graphics2D g2, PlotOrientation orientation, 
-            double x, double y, double offset, double size) {
+    private void drawMilestone(Graphics2D g2, PlotOrientation orientation, Rectangle2D bar) {
         g2.setColor(getMilestoneColor());
-        Path2D.Double path = new Path2D.Double();
-        if (orientation == PlotOrientation.HORIZONTAL) {
-            x += offset;
-        } else {
-            y += offset;
+        double h = bar.getHeight();
+        double x =  bar.getX();
+        double y = bar.getY();
+        if (orientation == PlotOrientation.VERTICAL) {
+            h = bar.getWidth();
+            x = bar.getY();
+            y = bar.getX();
         }
+        Path2D.Double path = new Path2D.Double();
+        double segment = h / 2;
+        x += segment;
         path.moveTo(x, y);
-        x += size;
-        y += size;
+        x += segment;
+        y += segment;
         path.lineTo(x, y);
-        x -= size;
-        y += size;
+        x -= segment;
+        y += segment;
         path.lineTo(x, y);
-        x -= size;
-        y -= size;
+        x -= segment;
+        y -= segment;
         path.lineTo(x, y);
-        x += size;
-        y -= size;
+        x += segment;
+        y -= segment;
         path.lineTo(x, y);
         g2.fill(path);
     }
@@ -829,10 +815,10 @@ public class GanttRenderer extends IntervalBarRenderer
         int y2Round = new Double(child.getY() * digits).intValue();
         if (isParentMilestone && y1Round < y2Round) {
             x1 = parent.getX() + offset;
-            y1 = parent.getY() + parent.getHeight() + 3;
+            y1 = parent.getY() + parent.getHeight();
             x2 = x1;
             y2 = child.getY() + offset;
-            g2.draw(new Line2D.Double(x1, y1, x1, y2));
+           // g2.draw(new Line2D.Double(x1, y1, x1, y2));
             x1 = x2;
             y1 = y2;
         } else {
@@ -902,6 +888,8 @@ public class GanttRenderer extends IntervalBarRenderer
             direction = Direction.RIGHT;
         } else {
             x2 = x1;
+            double h = isParentMilestone ? parent.getHeight() : + offset + 1;
+            y1 = parent.getY() + h;
             y2 = child.getY();
             g2.draw(new Line2D.Double(x1, y1, x2, y2));
             direction = Direction.DOWN;
